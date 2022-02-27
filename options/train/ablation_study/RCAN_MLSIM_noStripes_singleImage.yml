@@ -1,0 +1,113 @@
+# TODO
+# general settings
+name: RCAN_MLSIM_noStripes_singleImage
+model_type: SRModel
+scale: 2  
+num_gpu: 1  # set num_gpu: 0 for cpu mode
+manual_seed: 10
+
+# dataset and data loader settings
+datasets:
+  train:
+    name: DIV2K_singleImage
+    type: PairedSIMDataset
+    dataroot_gt: /local/scratch/username/20211105_bbc-9k-SIMdata-3-nostripes
+    dataroot_lq: /local/scratch/username/20211105_bbc-9k-SIMdata-3-nostripes
+    # (for lmdb)
+    # dataroot_gt: datasets/DIV2K/DIV2K_train_HR_sub.lmdb
+    # dataroot_lq: datasets/DIV2K/DIV2K_train_LR_bicubic_X2_sub.lmdb
+    filename_tmpl: '{}'
+    io_backend:
+      type: disk
+      # (for lmdb)
+      # type: lmdb
+
+    gt_size: 1024
+    patchSize: 256
+    use_flip: true
+    use_rot: true
+
+    # data loader
+    use_shuffle: true
+    num_worker_per_gpu: 6
+    batch_size_per_gpu: 1
+    dataset_enlarge_ratio: 1
+    prefetch_mode: ~
+
+  val:
+    name: dokumentarer_singleImage
+    type: PairedSIMDataset
+    dataroot_gt: /local/scratch/username/20211105_bbc-9k-SIMdata-3-valid-nostripes
+    dataroot_lq: /local/scratch/username/20211105_bbc-9k-SIMdata-3-valid-nostripes
+    gt_size: 1024
+    patchSize: ~
+    io_backend:
+      type: disk
+
+# network structures
+network_g:
+  type: RCAN
+  num_in_ch: 1
+  num_out_ch: 1
+  num_feat: 64
+  num_group: 5
+  num_block: 12
+  squeeze_factor: 16
+  upscale: 2
+  res_scale: 1
+  img_range: 1.
+  rgb_mean: [0,0,0]
+
+# path
+path:
+  pretrain_network_g: ~
+  strict_load_g: true
+  resume_state: ~
+
+# training settings
+train:
+  ema_decay: 0.999
+  optim_g:
+    type: Adam
+    lr: !!float 1e-4
+    weight_decay: 0
+    betas: [0.9, 0.99]
+
+  scheduler:
+    type: MultiStepLR
+    milestones: [100000,130000]
+    gamma: 0.5
+
+  total_iter: 150000
+  warmup_iter: -1  # no warm up
+
+  # losses
+  pixel_opt:
+    type: L1Loss
+    loss_weight: 1.0
+    reduction: mean
+
+# validation settings
+val:
+  val_freq: !!float 1e3
+  save_img: true
+
+  metrics:
+    psnr: # metric name, can be arbitrary
+      type: calculate_psnr
+      crop_border: 2
+      test_y_channel: false
+
+# logging settings
+logger:
+  print_freq: 100
+  save_checkpoint_freq: !!float 5e3
+  use_tb_logger: true
+  wandb:
+    project: transformer-sim
+    resume_id: ~
+
+# dist training settings
+dist_params:
+  backend: nccl
+  port: 29500
