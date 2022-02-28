@@ -16,3 +16,5 @@ yapf
 timm
 self_attention_cv
 torchsummary
+einops
+tensorboard

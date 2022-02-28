@@ -13,7 +13,7 @@ datasets:
     type: PairedSIMDataset
     dataroot_gt: /rds/user/username/hpc-work/20211105_bbc-9k-SIMdata-3
     dataroot_lq: /rds/user/username/hpc-work/20211105_bbc-9k-SIMdata-3
-    meta_info_file: 
+    meta_info_file:
     filename_tmpl: '{}'
     io_backend:
       type: disk

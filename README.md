@@ -17,6 +17,19 @@
 - RBPN code base based on official implementation:
     - `RBPN-PyTorch`
 
+## Installation of environment 
+See `requirements.txt` for all the required packages. They can be installed with pip using
+```
+pip install -r requirements.txt
+```
+It is recommended to use Anaconda to make a virtual environment and for installation of Pytorch so that the CUDA drivers are installed automatically. The following snippet should install everything necessary:  
+```
+conda create -n vsrsim python=3.8
+conda activate vsrsim
+conda install pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch
+pip install scikit-image matplotlib scipy opencv-python tqdm timm pyyaml einops torchsummary
+```
+
 ## Video sampling
 
 Given a collection of .mp4 and .mkv video containers, we use the FFMPEG library to sample the collection with a time interval of 5 seconds between sequences. The script is launched using Powershell with
