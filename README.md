@@ -26,7 +26,7 @@ Being a video super-resolution method, VSR-SIM is inherently robust to significa
 Currently under review as of February 2022.
 
 ### Pre-print manuscript, Feburary 2022
-A link to an arXiv preprint publication will be given here shortly.
+https://arxiv.org/abs/2203.00030
 
 
 ## Layout of repository
