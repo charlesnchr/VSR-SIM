@@ -2,7 +2,7 @@ import numpy as np
 from numpy import pi, cos, sin
 from numpy.fft import fft2, ifft2, fftshift, ifftshift
 
-from skimage import io
+from skimage import io,transform
 from scipy.signal import convolve2d
 import scipy.special
 
@@ -71,7 +71,7 @@ def SIMimages(opt, DIo, PSFo, OTFo):
     for i in range(opt.Nangles):
         orientation[i] = i*pi/opt.Nangles + opt.alpha + opt.angleError
 
-    if opt.shuffleOrientations: 
+    if opt.shuffleOrientations:
         np.random.shuffle(orientation)
 
     # illumination frequency vectors
