@@ -106,7 +106,7 @@ def processImage(file):
             Io = Io.mean(2)  # if not grayscale
     else:
         Io = io.imread(file) / 255
-        Io = transform.resize(Io, (opt.imageSize, opt.imageSize), anti_aliasing=True)
+        # Io = transform.resize(Io, (opt.imageSize, opt.imageSize), anti_aliasing=True)
 
         if len(Io.shape) > 2 and Io.shape[2] > 1:
             Io = Io.mean(2)  # if not grayscale
@@ -118,8 +118,7 @@ def processImage(file):
     for n in range(opt.nrep):
         SIMopt = GetParams()
         SIMopt.outputname = '%s/%s_%d.tif' % (opt.root, filename, n)
-        I = im_form_model.SIMulator_functions.Generate_SIM_Image(SIMopt, Io)
-    
+        I = im_form_model.SIMulator_functions.Generate_SIM_Image(SIMopt, Io, opt.imageSize, opt.imageSize*opt.scale)
 
 # ------------ Main loop --------------
 def processSeqImage(file):
@@ -189,18 +188,26 @@ if __name__ == '__main__':
         shutil.copy2('im_form_model/SIMulator_functions.py',opt.out)
 
         files = []
-        if not ext == 'imagefolder':
+        if 'imagefolder' not in opt.ext:
             for ext in opt.ext:
                 files.extend(sorted(glob.glob(opt.sourceimages_path + "/*." + ext)))
         else:
+            print('looking in opt',opt.sourceimages_path)
             folders = glob.glob("%s/*" % opt.sourceimages_path)
             for folder in folders:
-                files.extend(glob.glob("%s/*" % folder))
+                subentities = glob.glob("%s/*" % folder)
+                if len(subentities) > 0:
+                    if subentities[0].endswith(('.jpg','.png')):
+                        # found a directory of sequence of individual frames
+                        files.extend(folders)
+                        break
+                    # assume that subentities are tiff stacks
+                    files.extend(subentities)
 
         if len(files) == 0:
             print('source images not found')
             sys.exit(0)
-        elif opt.ntrain + opt.ntest > opt.nrep*len(files):
+        elif opt.ntrain + opt.ntest > opt.nrep*len(files) and opt.ntrain + opt.ntest > 0:
             print('ntrain + opt.ntest is too high given nrep and number of source images')
             sys.exit(0)
         elif opt.nch_in > opt.Nangles*opt.Nshifts:
@@ -209,10 +216,16 @@ if __name__ == '__main__':
         
         files = files[:math.ceil( (opt.ntrain + opt.ntest) / opt.nrep )]
 
+        if opt.ntrain + opt.ntest > 0: # if == 0, use all
+            files = files[:math.ceil( (opt.ntrain + opt.ntest) / opt.nrep )]
+
+        for file in files:
+            print(file)
+
         with Pool(opt.datagen_workers) as p:
             if not opt.seqSIM:
                 p.map(processImage,files)
-            elif not ext == 'imagefolder':
+            elif 'imagefolder' not in opt.ext:
                 p.map(processSeqImage,files)
             else:
                 p.map(processSeqImageFolder,files) # processSeqImage if using tif files instead of folders of jpgs
