@@ -10,12 +10,20 @@ from multiprocessing import Pool
 import subprocess
 import im_form_model.SIMulator_functions
 import im_form_model.SeqSIMulator_functions
-import run
 import shutil
-import wandb
 
 # ------------ Options --------------
-from options import parser
+
+parser = argparse.ArgumentParser()
+
+parser.add_argument('--imageSize', type=int, default=24, help='the low resolution image size')
+parser.add_argument('--scale', type=int, default=4, help='low to high resolution scaling factor')
+parser.add_argument('--nch_in', type=int, default=3, help='colour channels in input')
+parser.add_argument('--nch_out', type=int, default=3, help='colour channels in output')
+parser.add_argument('--ntrain', type=int, default=0, help='number of samples to train on')
+parser.add_argument('--ntest', type=int, default=10, help='number of images to test per epoch or test run')
+
+parser.add_argument('--root', type=str, default='SIMdata-out', help='dataset dir')
 parser.add_argument('--sourceimages_path', type=str, default='/Volumes/datasets/DIV2K/DIV2K_train_HR')
 parser.add_argument('--nrep', type=int, default=1, help='instances of same source image')
 parser.add_argument('--datagen_workers', type=int, default=8, help='')
@@ -37,17 +45,12 @@ parser.add_argument('--alphaErrorFac', type=float, default=0.33) # pi/3 quite la
 parser.add_argument('--angleError', type=float, default=10) # pi/3 quite large but still feasible
 parser.add_argument('--usePoissonNoise', action='store_true')
 parser.add_argument('--dontShuffleOrientations', action='store_true')
-parser.add_argument('--dataonly', action='store_true')
 parser.add_argument('--applyOTFtoGT', action='store_true')
 parser.add_argument('--noStripes', action='store_true')
 parser.add_argument('--seqSIM', action='store_true')
 parser.add_argument('--skip_datagen', action='store_true')
 
 opt = parser.parse_args()
-
-if opt.root == 'auto':
-    opt.root = opt.out + '_SIMdata'
-
 
 
 # ------------ Parameters-------------
@@ -86,7 +89,7 @@ def GetParams(): # uniform randomisation
     SIMopt.OTF_and_GT = True
     # use a blurred target (according to theoretical optimal construction)
     SIMopt.applyOTFtoGT = opt.applyOTFtoGT
-    # whether to simulate images using just widefield illumination 
+    # whether to simulate images using just widefield illumination
     SIMopt.noStripes = opt.noStripes
 
 
@@ -172,20 +175,12 @@ def processSeqImageFolder(filepath):
 
 
 if __name__ == '__main__':
-    
-    # wandb.init(project="phd")
-    # wandb.config.update(opt)
-    # opt.wandb = wandb
 
     print(opt)
 
     if not opt.skip_datagen:
 
         os.makedirs(opt.root, exist_ok=True)
-        os.makedirs(opt.out, exist_ok=True)
-        
-        shutil.copy2('datagen_pipeline.py',opt.out)
-        shutil.copy2('im_form_model/SIMulator_functions.py',opt.out)
 
         files = []
         if 'imagefolder' not in opt.ext:
@@ -213,7 +208,7 @@ if __name__ == '__main__':
         elif opt.nch_in > opt.Nangles*opt.Nshifts:
             print('nch_in cannot be greater than Nangles*Nshifts - not enough SIM frames')
             sys.exit(0)
-        
+
         files = files[:math.ceil( (opt.ntrain + opt.ntest) / opt.nrep )]
 
         if opt.ntrain + opt.ntest > 0: # if == 0, use all
@@ -234,11 +229,3 @@ if __name__ == '__main__':
         print('Done generating images,',opt.root)
 
 
-    # cmd = '\npython run.py ' + ' '.join(sys.argv[:])
-    # print(cmd,end='\n\n')
-    # subprocess.Popen(cmd,shell=True)
-    if not opt.dataonly:
-        print('Now starting training:\n')
-        
-        run.main(opt)
-    
