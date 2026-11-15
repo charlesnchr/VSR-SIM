@@ -131,6 +131,41 @@ The checkpoint in the release is the `SwinIR_RCAB` network, with 22.2 million pa
 
 The variant with 3D windows, where attention also spans neighbouring frames, is `basicsr/archs/vsr-sim_arch.py` with the option file `options/train/VSR-SIM/VSR-SIM.yml`. Its weights are not released. In the paper's ablation the 3D windows are worth 0.14 dB on the Medium test set, 30.15 dB against 30.01 dB for channel attention and shifted windows without them. [Hyperparameters.md](Hyperparameters.md) lists both variants and the comparison models.
 
+## Train your own model
+
+The released model expects three orientations and three phase shifts. For another acquisition scheme, wavelength or numerical aperture, set the simulation to match and retrain. There are three steps.
+
+Sample clips of nine consecutive frames from a collection of video files. The script needs PowerShell and ffmpeg and takes its list of files at the top. It writes the clips to `frames-for-training`, one folder per video with one subfolder per clip.
+
+```bash
+pwsh scripts/sample_documentary_videos.ps1
+```
+
+Pass the clips through the image formation model. Each clip becomes one TIFF with the nine raw frames, the optical transfer function and the ground truth. With `--ntrain 0` every clip in the folder is processed. Do the same for a held-out folder of clips with `--root datasets/SIMdata-valid`.
+
+```bash
+python scripts/datagen_pipeline.py --root datasets/SIMdata-train --sourceimages_path frames-for-training \
+    --seqSIM --ext imagefolder --imageSize 512 --scale 2 --nch_in 9 --nch_out 1 --Nangles 3 --Nshifts 3 \
+    --ntrain 0 --ntest 0 --nrep 1 --datagen_workers 10 \
+    --NoiseLevel 8 --NoiseLevelRandFac 8 --phaseErrorFac 0.05 --alphaErrorFac 0.05
+```
+
+Train with the option file of the variant you want.
+
+```bash
+PYTHONPATH=. python basicsr/train.py -opt options/train/VSR-SIM/VSR-SIM.yml
+```
+
+The paper trained for 500,000 iterations on four A100 GPUs. The training clips came from BBC nature documentaries used under an ERA license, and they cannot be redistributed, so you need your own video.
+
+`inference/inference_options.py` evaluates a checkpoint on a folder of simulated stacks and reports PSNR and SSIM against their ground truth. For the released weights that is
+
+```bash
+PYTHONPATH=. python inference/inference_options.py --task simrec --scale 2 \
+    --model_path vsr-sim_swinir-rcab_20220202.pth -opt options/train/VSR-SIM/SwinIR_RCAB_kiiara.yml \
+    --input datasets/SIMdata-valid --output results
+```
+
 ## Layout of repository
 
 - Powershell script for video dataset sampling:
@@ -147,35 +182,6 @@ The variant with 3D windows, where attention also spans neighbouring frames, is 
     - `inference/inference_options.py`
 - RBPN code base based on official implementation:
     - `RBPN-PyTorch`
-
-## Video sampling
-
-Given a collection of .mp4 and .mkv video containers, we use the FFMPEG library to sample the collection with a time interval of 5 seconds between sequences. The script is launched using Powershell with
-
-```
-pwsh scripts/sample_documentary_videos.ps1
-```
-
-
-## Data generation
-The image formation pipeline can be used as follows
-```
-python datagen_pipeline.py --root TRAINING_DATA_DIRECTORY \
-    --sourceimages_path SAMPLED_IMAGE_SEQUENCE_DIRECTORY --nrep 1\
-    --datagen_workers 10 --imageSize 512  --nch_in 9 --nch_out 1\
-    --ntrain 100000 --ntest 0 --scale 2 --nepoch 100 --scheduler 20,0.5\
-    --norm minmax --workers 6 --dataonly --NoiseLevel 8 \
-    --NoiseLevelRandFac 8 --Nangle 3 --Nshift 3 --phaseErrorFac 0.05 \
-    --alphaErrorFac 0.05 --seqSIM --ext imagefolder
-```
-
-
-## Training
-To train a model with the VSR-SIM architecture using options specified in an associated options file, run the following
-```
-PYTHONPATH="./:${PYTHONPATH}" python basicsr/train.py \
-    -opt options/train/VSR-SIM/VSR-SIM.yml
-```
 
 ## Hyperparameters used in VSR-SIM and referenced methods
 See [Hyperparameters.md](Hyperparameters.md) for an overview of the parameters used in models in the paper. The parameters are also given in the individual YAML files in the `options` folder.
