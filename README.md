@@ -1,15 +1,23 @@
-# VSR-SIM
+<h1 align="center">VSR-SIM</h1>
 
-**VSR-SIM: Spatio-temporal Vision Transformer for Super-resolution Microscopy**
+<p align="center">
+  <b>Super-resolution microscopy for samples that will not hold still.</b><br>
+  A video transformer that reconstructs structured illumination microscopy through motion,<br>
+  and returns an image for every raw frame instead of one for every nine.
+</p>
 
+<p align="center">
+  <a href="https://arxiv.org/abs/2203.00030"><img src="https://img.shields.io/badge/arXiv-2203.00030-b31b1b" alt="arXiv preprint"></a>
+  <a href="https://github.com/charlesnchr/VSR-SIM/releases/tag/v1.0"><img src="https://img.shields.io/badge/weights%20and%20data-v1.0-blue" alt="Weights and example data in release v1.0"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-blue" alt="GPL-3.0 license"></a>
+</p>
 
-_Charles N. Christensen<sup>1,2,*</sup>, Meng Lu<sup>1</sup>, Edward N. Ward<sup>1</sup>, Pietro Lio<sup>2</sup>, Clemens F. Kaminski_</br></br>
-<sup>1</sup>University of Cambridge, Department of Chemical Engineering and Biotechnology, Laser Analytics Group</br>
-<sup>2</sup>University of Cambridge, Department of Computer Science and Technology, Artificial Intelligence Group</br>
-<sup> *</sup>**Author of this repository**:
-- GitHub: [charlesnchr](http://github.com/charlesnchr)
-- Email: <code>charles.n.chr@gmail.com</code>
-- Twitter: [charlesnchr](https://twitter.com/charlesnchr)
+<p align="center">
+  <img src="fig/hero.gif" alt="A moving sample of microtubules and beads as a wide-field average, reconstructed by ML-SIM, reconstructed by VSR-SIM, and the ground truth" width="900">
+</p>
+<p align="center">
+  <sub>A simulated acquisition of microtubules that move one camera pixel per raw frame, with beads on paths of their own. The first three panels come from the same raw frames, and ML-SIM reconstructs each stack of nine on its own. Run <code>python reconstruct.py --rolling examples/Sequence_microtubules.tif</code> to reproduce the VSR-SIM panel.</sub>
+</p>
 
 ## Introduction
 
