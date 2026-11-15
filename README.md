@@ -39,7 +39,7 @@ python reconstruct.py --examples
 
 The first run downloads the pre-trained weights (179 MB) and nine example files (41 MB), and checks their SHA-256. Each 9-frame stack in `examples/` gets a wide-field image and a VSR-SIM reconstruction in `reconstructions/`. A GPU is used when one is available. On a CPU a 512x512 stack takes about a minute.
 
-The examples include a sequence of 80 raw frames of a moving sample. Rolling reconstruction turns it into 72 images, which takes about ten minutes on a CPU.
+The examples include a sequence of 80 raw frames of a moving sample. Rolling reconstruction turns it into 72 images, which takes a few minutes on a CPU.
 
 ```bash
 python reconstruct.py --rolling examples/Sequence_microtubules.tif
