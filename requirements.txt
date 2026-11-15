@@ -9,6 +9,6 @@ scipy
 torch>=1.10
 torchvision
 tqdm
-timm
+timm>=0.9
 einops
 tensorboard
