@@ -77,7 +77,7 @@ def main():
     opt['auto_resume'] = False
     opt['is_train'] = False
     opt['dist'] = False
-    opt['num_gpu'] = 1
+    opt['num_gpu'] = 1 if torch.cuda.is_available() else 0
     opt['rank'], opt['world_size'] = 0,1
 
     os.makedirs(args.output, exist_ok=True)
