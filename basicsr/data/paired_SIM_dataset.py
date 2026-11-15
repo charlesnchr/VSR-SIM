@@ -147,8 +147,7 @@ class PairedSIMDataset(data.Dataset):
         if self.patchSize is not None:
             inputimg, gt = self.get_patch(inputimg, gt, patch_size=self.patchSize, scale=self.scale)
 
-        # if self.nch_out == 1:
-            # gt = gt.unsqueeze(0)
+        gt = gt.unsqueeze(0)  # (1, H, W), the shape of the network output
         # widefield = torch.tensor(widefield).unsqueeze(0).float()
         # simimg = torch.tensor(simimg).unsqueeze(0).float()
 

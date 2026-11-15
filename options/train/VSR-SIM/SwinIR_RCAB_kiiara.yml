@@ -11,8 +11,8 @@ datasets:
   train:
     name: dokumentarer
     type: PairedSIMDataset
-    dataroot_gt: /local/scratch/cnc39/20211105_attenborough-9k-SIMdata-3
-    dataroot_lq: /local/scratch/cnc39/20211105_attenborough-9k-SIMdata-3
+    dataroot_gt: datasets/SIMdata-train
+    dataroot_lq: datasets/SIMdata-train
     meta_info_file: 
     filename_tmpl: '{}'
     io_backend:
@@ -33,8 +33,8 @@ datasets:
   val:
     name: dokumentarer
     type: PairedSIMDataset
-    dataroot_gt: /local/scratch/cnc39/20211106_attenborough-9k-SIMdata-3-valid
-    dataroot_lq: /local/scratch/cnc39/20211106_attenborough-9k-SIMdata-3-valid
+    dataroot_gt: datasets/SIMdata-valid
+    dataroot_lq: datasets/SIMdata-valid
     gt_size: 1024
     patchSize: ~
     io_backend:
@@ -60,7 +60,7 @@ network_g:
 path:
   pretrain_network_g: ~
   strict_load_g: true
-  resume_state: experiments/train_SwinIR_MLSIM_x2/training_states/200000.state
+  resume_state: ~
 
 # training settings
 train:
@@ -103,8 +103,7 @@ logger:
   save_checkpoint_freq: !!float 5e3
   use_tb_logger: true
   wandb:
-    project: transformer-sim
-    #project: ~
+    project: ~
     resume_id: ~
 
 # dist training settings
