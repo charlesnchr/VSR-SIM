@@ -8,5 +8,6 @@ examples/
 reconstructions/
 
 # Training output
+datasets/
 experiments/
 tb_logger/
