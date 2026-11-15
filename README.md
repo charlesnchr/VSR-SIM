@@ -166,25 +166,30 @@ PYTHONPATH=. python inference/inference_options.py --task simrec --scale 2 \
     --input datasets/SIMdata-valid --output results
 ```
 
-## Layout of repository
+## What is in the repository
 
-- Powershell script for video dataset sampling:
-    - `scripts/sample_documentary_videos.ps1`
-- Python code for image formation model:
-    - `scripts/im_form_model/SIMulator.py`
-- Data generation script:
-    - `scripts/datagen_pipeline.py`
-- Model architecture based on Pytorch:
-    - `basicsr/archs/vsr-sim_arch.py`
-- Training code:
-    - `basicsr/train.py`
-- Inference code for testing:
-    - `inference/inference_options.py`
-- RBPN code base based on official implementation:
-    - `RBPN-PyTorch`
+| Path | Contents |
+| --- | --- |
+| `reconstruct.py` | Reconstruct TIFF stacks and sequences with the pre-trained model |
+| `scripts/im_form_model/` | SIM image formation model for single images and for clips |
+| `scripts/datagen_pipeline.py` | Generates training stacks from images or clips |
+| `scripts/simulate_sequence.py` | Simulates one continuous acquisition of a moving sample, the input for `--rolling` |
+| `scripts/sample_documentary_videos.ps1` | Samples nine-frame clips from video files with ffmpeg |
+| `basicsr/` | Training code, built on [BasicSR](https://github.com/xinntao/BasicSR). The architectures are in `basicsr/archs/` |
+| `options/train/` | Option files for VSR-SIM, the comparison models and the ablations |
+| `inference/` | Evaluation scripts that report PSNR and SSIM |
+| `RBPN-PyTorch/` | The RBPN baseline, adapted to SIM input |
+| `fig/make_figures.py` | Regenerates the figures on this page |
 
-## Hyperparameters used in VSR-SIM and referenced methods
-See [Hyperparameters.md](Hyperparameters.md) for an overview of the parameters used in models in the paper. The parameters are also given in the individual YAML files in the `options` folder.
+The weights and the example data are in the [v1.0 release](https://github.com/charlesnchr/VSR-SIM/releases/tag/v1.0).
+
+## Limits
+
+- On a sample that holds still, a per-stack method can be sharper. In the motion benchmark above ML-SIM and VSR-SIM are level at zero motion, and in the paper's endoplasmic reticulum experiment FairSIM recovers more fine detail than VSR-SIM, with more artefacts. VSR-SIM is for samples that move.
+- Past a certain speed the stripes stop helping. On the Extreme test set VSR-SIM scores the same as the video deconvolution network that never saw structured illumination. The reconstruction stays free of motion artefacts, but the extra resolution of SIM is gone.
+- The released model handles 2D SIM with nine frames and doubles the sampling. Other acquisition schemes need a retrained model, and 3D SIM is not supported.
+- `reconstruct.py` processes a frame in one piece, so memory grows with the image area. A 512x512 stack takes about 2.4 GB on a CPU.
+- A network can only be trusted within the conditions it was trained for. For quantitative work on a new kind of sample, check a few reconstructions against a classical method first.
 
 ## Credits
 The implementation of VSR-SIM and structure of the code is inspired by the following repositories. Reference implementations for methods that are compared to in the paper are also listed. See [Hyperparameters.md](Hyperparameters.md) for parameters used.
