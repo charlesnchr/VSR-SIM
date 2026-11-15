@@ -12,7 +12,6 @@ from basicsr.models import build_model
 from basicsr.utils import (AvgTimer, MessageLogger, check_resume, get_env_info, get_root_logger, get_time_str,
                            init_tb_logger, init_wandb_logger, make_exp_dirs, mkdir_and_rename, scandir)
 from basicsr.utils.options import copy_opt_file, dict2str, parse_options
-from torchsummary import summary
 import sys
 
 
@@ -133,7 +132,6 @@ def train_pipeline(root_path):
         start_epoch = 0
         current_iter = 0
 
-    # summary(model.net_g, (9,64,64))
     # sys.exit(0)
 
     # create message logger (formatted outputs)
