@@ -56,12 +56,19 @@ EXAMPLE_SEQUENCE = {
 WINDOW = 8  # side of the attention windows, the input is padded to a multiple of it
 
 
+def progress(blocks, block_size, total):
+    if total > 0:
+        done = min(100, 100 * blocks * block_size // total)
+        print("\r  %3d%% of %.0f MB" % (done, total / 1e6), end="", flush=True)
+
+
 def download(urls, dest, sha256):
     """Fetch a file, trying each URL in turn, and check its hash."""
     for url in urls:
         print("Downloading", url)
         try:
-            urllib.request.urlretrieve(url, dest + ".part")
+            urllib.request.urlretrieve(url, dest + ".part", progress)
+            print()
         except OSError as err:
             print("  failed:", err)
             continue
