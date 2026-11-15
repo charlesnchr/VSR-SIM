@@ -6,11 +6,13 @@ Each input is a TIFF stack whose first 9 frames are the raw SIM acquisition
 (3 orientations x 3 phase shifts, in any order). For every stack the script
 writes the VSR-SIM reconstruction, at twice the pixel count of the raw frames
 in each direction, and the wide-field image (the mean of the raw frames) to
-the output folder.
+the output folder. The weights are downloaded on first use.
 """
 
 import argparse
+import hashlib
 import os
+import urllib.request
 
 import numpy as np
 import torch
@@ -19,8 +21,33 @@ from skimage import io
 
 from basicsr.archs.swinir_rcab_arch import SwinIR_RCAB
 
+RELEASE = "https://github.com/charlesnchr/VSR-SIM/releases/download/v1.0/"
+MIRROR = "https://huggingface.co/spaces/charlesnchr/VSR-SIM/resolve/main/"
+
 WEIGHTS_NAME = "vsr-sim_swinir-rcab_20220202.pth"
+WEIGHTS_SHA256 = "33e053fe6cf54effac05de7385f94e7385de9ba20d59819f843aa396a4017b3a"
+WEIGHTS_URLS = (RELEASE + WEIGHTS_NAME, MIRROR + "model/swinir_rcab_nov2021.pth")
+
 WINDOW = 8  # side of the attention windows, the input is padded to a multiple of it
+
+
+def download(urls, dest, sha256):
+    """Fetch a file, trying each URL in turn, and check its hash."""
+    for url in urls:
+        print("Downloading", url)
+        try:
+            urllib.request.urlretrieve(url, dest + ".part")
+        except OSError as err:
+            print("  failed:", err)
+            continue
+        with open(dest + ".part", "rb") as f:
+            digest = hashlib.sha256(f.read()).hexdigest()
+        if digest == sha256:
+            os.replace(dest + ".part", dest)
+            return
+        print("  checksum mismatch, discarding the file")
+        os.remove(dest + ".part")
+    raise SystemExit("Could not download %s. Fetch it by hand from %s" % (os.path.basename(dest), urls[0]))
 
 
 def load_model(weights, device):
@@ -30,6 +57,8 @@ def load_model(weights, device):
         depths=[6] * 5, embed_dim=64, num_heads=[8] * 5, mlp_ratio=2,
         upsampler=None, resi_connection="1conv", pixelshuffleFactor=1,
     )
+    if not os.path.isfile(weights):
+        download(WEIGHTS_URLS, weights, WEIGHTS_SHA256)
     checkpoint = torch.load(weights, map_location="cpu")
     net.load_state_dict(checkpoint["params_ema" if "params_ema" in checkpoint else "params"])
     return net.to(device).eval()
