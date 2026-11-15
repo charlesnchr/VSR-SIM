@@ -29,6 +29,24 @@ VSR-SIM treats the nine exposures as a short video. A transformer with windowed 
 - **Trained on simulation only.** The training set is 100,000 nine-frame clips of nature footage, each passed through a SIM image formation model with randomised stripe frequency, phase, modulation depth and noise. The targets are the original frames, so they carry none of the motion artefacts that a classical reconstruction would put into them.
 - **Runs with one command.** `python reconstruct.py --examples` downloads the weights and the example data and reconstructs it.
 
+## Try it
+
+```bash
+git clone https://github.com/charlesnchr/VSR-SIM && cd VSR-SIM
+pip install -r requirements.txt
+python reconstruct.py --examples
+```
+
+The first run downloads the pre-trained weights (179 MB) and nine example files (41 MB), and checks their SHA-256. Each 9-frame stack in `examples/` gets a wide-field image and a VSR-SIM reconstruction in `reconstructions/`. A GPU is used when one is available. On a CPU a 512x512 stack takes about a minute.
+
+The examples include a sequence of 80 raw frames of a moving sample. Rolling reconstruction turns it into 72 images, which takes about ten minutes on a CPU.
+
+```bash
+python reconstruct.py --rolling examples/Sequence_microtubules.tif
+```
+
+To run it on your own data, pass TIFF stacks whose first nine frames are the raw acquisition, three pattern orientations with three phase shifts each. The output has twice as many pixels in each direction. With `--rolling` every frame of the TIFF is a raw frame, and the nine patterns have to keep cycling in the same order for the whole acquisition.
+
 ## Layout of repository
 
 - Powershell script for video dataset sampling:
@@ -45,19 +63,6 @@ VSR-SIM treats the nine exposures as a short video. A transformer with windowed 
     - `inference/inference_options.py`
 - RBPN code base based on official implementation:
     - `RBPN-PyTorch`
-
-## Installation of environment
-See `requirements.txt` for all the required packages. They can be installed with pip using
-```
-pip install -r requirements.txt
-```
-It is recommended to use Anaconda to make a virtual environment and for installation of Pytorch so that the CUDA drivers are installed automatically. The following snippet should install everything necessary:
-```
-conda create -n vsrsim python=3.8
-conda activate vsrsim
-conda install pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch
-pip install scikit-image matplotlib scipy opencv-python tqdm timm pyyaml einops torchsummary
-```
 
 ## Video sampling
 
@@ -85,15 +90,6 @@ python datagen_pipeline.py --root TRAINING_DATA_DIRECTORY \
 To train a model with the VSR-SIM architecture using options specified in an associated options file, run the following
 ```
 PYTHONPATH="./:${PYTHONPATH}" python basicsr/train.py \
-    -opt options/train/VSR-SIM/VSR-SIM.yml
-```
-
-## Inference on test set
-Inference on a test set can be done with
-```
-PYTHONPATH="./:${PYTHONPATH}" python inference/inference_options.py\
-    --task simrec --model_path experiments/VSR-SIM/models/net_g.pth\
-    --scale 2 --input testdir/inputs --output testdir/outputs/VSR-SIM \
     -opt options/train/VSR-SIM/VSR-SIM.yml
 ```
 
