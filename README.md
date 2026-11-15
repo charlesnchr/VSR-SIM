@@ -47,6 +47,64 @@ python reconstruct.py --rolling examples/Sequence_microtubules.tif
 
 To run it on your own data, pass TIFF stacks whose first nine frames are the raw acquisition, three pattern orientations with three phase shifts each. The output has twice as many pixels in each direction. With `--rolling` every frame of the TIFF is a raw frame, and the nine patterns have to keep cycling in the same order for the whole acquisition.
 
+## Results
+
+### Motion benchmark
+
+How much does each method lose when the sample starts to move? The same simulated raw frames go to ML-SIM, which reconstructs one stack at a time and assumes it is static, and to VSR-SIM. The samples are ten DIV2K photographs that drift at a fixed speed during the nine exposures.
+
+<p align="center">
+  <img src="fig/motion-benchmark.png" alt="PSNR against the motion of the sample: VSR-SIM stays near 21 dB, ML-SIM falls from 21 dB to 14.5 dB, wide-field from 18.7 dB to 16.2 dB" width="760">
+</p>
+
+From a static sample to 3 camera pixels per raw frame, VSR-SIM loses 0.9 dB. ML-SIM loses 6.7 dB and drops below the wide-field image at 1 pixel per frame. The pre-print reports the same pattern for a video sequence with a growing delay between frames, 1 dB against 6 dB. DIV2K is the collection ML-SIM was trained on, so the test images favour ML-SIM if anything. The numbers are in [`fig/motion-benchmark.json`](fig/motion-benchmark.json) and `python fig/make_figures.py --mlsim ../ML-SIM --benchmark` reruns them.
+
+### Moving scenes with a known ground truth
+
+Five of the example stacks store the ground truth they were simulated from, and four are shown here. The first is a microtubule image that drifts during the acquisition, the other three are clips of video. ML-SIM turns the motion into ringing and doubled edges. The PSNR in the corner of each tile is for the full image.
+
+<p align="center">
+  <img src="fig/results.png" alt="Wide-field, ML-SIM, VSR-SIM and ground truth for microtubules, flamingos, a street and a bird, with the PSNR of each" width="900">
+</p>
+
+### Real acquisitions
+
+Two of the example stacks are raw data from an SLM-based SIM microscope. The model has only seen simulated nature footage, and it reconstructs both without any fitting to the microscope.
+
+<p align="center">
+  <img src="fig/experimental.png" alt="Wide-field and VSR-SIM images of endoplasmic reticulum and microtubules" width="640">
+</p>
+
+### Numbers from the paper
+
+The classical methods and ML-SIM handle a static sample and fail on a moving one. PSNR in dB on simulated test sets, Static from DIV2K images and Medium from nature video.
+
+| Method | Static | Medium motion |
+| --- | :---: | :---: |
+| Wide-field | 22.79 | 17.31 |
+| CC-SIM | 27.99 | 16.98 |
+| OpenSIM | 28.34 | 14.04 |
+| FairSIM | 28.54 | 15.34 |
+| ML-SIM | 32.30 | 18.41 |
+| **VSR-SIM** | **34.74** | **30.15** |
+
+Against networks that can handle motion the margin is smaller, and it closes as the motion grows. The two deconvolution baselines use the VSR-SIM architecture and were trained on the same footage without illumination stripes, so they show what the stripes add.
+
+| Method | Static | Medium | Fast | Extreme |
+| --- | :---: | :---: | :---: | :---: |
+| Single-frame deconvolution, no stripes | 31.23 | 28.08 | 25.38 | 22.50 |
+| Video deconvolution, no stripes | 31.15 | 28.15 | 25.41 | 22.98 |
+| RBPN, with optical flow | 33.16 | 29.25 | 25.29 | 21.48 |
+| **VSR-SIM** | **34.74** | **30.15** | **26.04** | 22.95 |
+
+<sub>Tables 2 and 3 of the <a href="https://arxiv.org/abs/2203.00030">pre-print</a>. The Fast and Extreme sets are REDS videos shot with a handheld camera, Extreme with every other frame skipped.</sub>
+
+The paper also compares the methods on a microtubule stack with motion in it, where the classical reconstructions fill with stripe artefacts.
+
+<p align="center">
+  <img src="fig/comparison-fig.png" alt="Fig. 1 of the paper: a microtubule stack reconstructed with CC-SIM, FairSIM, ML-SIM and VSR-SIM" width="640">
+</p>
+
 ## Layout of repository
 
 - Powershell script for video dataset sampling:
