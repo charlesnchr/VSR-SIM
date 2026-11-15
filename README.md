@@ -191,22 +191,33 @@ The weights and the example data are in the [v1.0 release](https://github.com/ch
 - `reconstruct.py` processes a frame in one piece, so memory grows with the image area. A 512x512 stack takes about 2.4 GB on a CPU.
 - A network can only be trusted within the conditions it was trained for. For quantitative work on a new kind of sample, check a few reconstructions against a classical method first.
 
+## Citation
+
+```bibtex
+@article{christensen2022vsrsim,
+  title   = {Spatio-temporal Vision Transformer for Super-resolution Microscopy},
+  author  = {Christensen, Charles N. and Lu, Meng and Ward, Edward N. and Lio, Pietro and Kaminski, Clemens F.},
+  journal = {arXiv preprint arXiv:2203.00030},
+  year    = {2022},
+  doi     = {10.48550/arXiv.2203.00030}
+}
+```
+
+The paper is a pre-print. VSR-SIM was developed in the [Laser Analytics Group](https://laser.ceb.cam.ac.uk/) and the Artificial Intelligence Group at the University of Cambridge by Charles N. Christensen, Meng Lu, Edward N. Ward, Pietro Lio and Clemens F. Kaminski. Questions about the code go to Charles, through the [issue tracker](https://github.com/charlesnchr/VSR-SIM/issues) or at `charles.n.chr@gmail.com`.
+
+## Related work
+
+- [ML-SIM](https://github.com/charlesnchr/ML-SIM) is the earlier method for single stacks of static samples, and the comparison in the figures above.
+- [ERnet](https://github.com/charlesnchr/ERnet-v2) segments and analyses the endoplasmic reticulum in images like the ones above.
+
+## License
+
+The code and the pre-trained weights are released under the [GNU General Public License v3.0](LICENSE). Code that comes from other projects keeps the license of its source, listed in [NOTICE.md](NOTICE.md).
+
 ## Credits
-The implementation of VSR-SIM and structure of the code is inspired by the following repositories. Reference implementations for methods that are compared to in the paper are also listed. See [Hyperparameters.md](Hyperparameters.md) for parameters used.
 
--   **SwinIR** [@Liang2021]\
-    Reference implementation: SwinIR:\
-    <https://github.com/JingyunLiang/SwinIR>
-
--   **Video Swin** [@Liu2021a]\
-    Reference implementation: Video-Swin-Transformer:\
-    <https://github.com/SwinTransformer/Video-Swin-Transformer>
-
--   **RBPN** [@Haris2019]\
-    Reference implementation: RBPN-PyTorch:\
-    <https://github.com/alterzero/RBPN-PyTorch>
-
--   **RCAN** [@Zhang2018d]\
-    Reference implementation: BasicSR [@wang2020basicsr]:\
-    <https://github.com/xinntao/BasicSR>
-
+- [SwinIR](https://github.com/JingyunLiang/SwinIR) and [Video Swin Transformer](https://github.com/SwinTransformer/Video-Swin-Transformer) for the transformer blocks the architecture builds on.
+- [BasicSR](https://github.com/xinntao/BasicSR) for the training framework and the RCAN implementation.
+- [RBPN-PyTorch](https://github.com/alterzero/RBPN-PyTorch) for the optical flow baseline.
+- [OpenSIM](https://github.com/LanMai/OpenSIM) for the image formation model that the simulator ports to Python.
+- [DIV2K](https://data.vision.ee.ethz.ch/cvl/DIV2K/) and [REDS](https://seungjunnah.github.io/Datasets/reds.html) for test images and video.
