@@ -1,2 +1,12 @@
 __pycache__
 .DS_Store
+.venv
+
+# Downloaded weights and example stacks, and the output of reconstruct.py
+*.pth
+examples/
+reconstructions/
+
+# Training output
+experiments/
+tb_logger/
