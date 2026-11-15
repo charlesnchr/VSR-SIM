@@ -60,7 +60,7 @@ network_g:
 path:
   pretrain_network_g: ~
   strict_load_g: true
-  resume_state: experiments/train_SwinIR_MLSIM_x2/training_states/200000.state
+  resume_state: ~
 
 # training settings
 train:
