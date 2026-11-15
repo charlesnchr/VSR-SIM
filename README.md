@@ -125,6 +125,12 @@ The patterns are shuffled in every training example, which is what makes rolling
 
 In the paper's live-cell experiment a reshaping event in the endoplasmic reticulum spans 20 raw frames of 50 ms each. FairSIM gives two images of it. The paper shows twelve from VSR-SIM.
 
+## Which weights are released
+
+The checkpoint in the release is the `SwinIR_RCAB` network, with 22.2 million parameters and the option file `options/train/VSR-SIM/SwinIR_RCAB_kiiara.yml`. It takes the nine frames as nine input channels and computes attention in 8x8 windows in the image plane. It is the file from the `v0.1-pre-print` release, unchanged. The reconstructions on this page were made with it, apart from the paper's own figure at the end of the results.
+
+The variant with 3D windows, where attention also spans neighbouring frames, is `basicsr/archs/vsr-sim_arch.py` with the option file `options/train/VSR-SIM/VSR-SIM.yml`. Its weights are not released. In the paper's ablation the 3D windows are worth 0.14 dB on the Medium test set, 30.15 dB against 30.01 dB for channel attention and shifted windows without them. [Hyperparameters.md](Hyperparameters.md) lists both variants and the comparison models.
+
 ## Layout of repository
 
 - Powershell script for video dataset sampling:
