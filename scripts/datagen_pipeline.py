@@ -209,8 +209,6 @@ if __name__ == '__main__':
             print('nch_in cannot be greater than Nangles*Nshifts - not enough SIM frames')
             sys.exit(0)
 
-        files = files[:math.ceil( (opt.ntrain + opt.ntest) / opt.nrep )]
-
         if opt.ntrain + opt.ntest > 0: # if == 0, use all
             files = files[:math.ceil( (opt.ntrain + opt.ntest) / opt.nrep )]
 
