@@ -5,10 +5,10 @@
     python reconstruct.py --rolling sequence.tif
 
 Each input is a TIFF stack whose first 9 frames are the raw SIM acquisition
-(3 orientations x 3 phase shifts, in the order of acquisition). For every stack the script
-writes the VSR-SIM reconstruction, at twice the pixel count of the raw frames
-in each direction, and the wide-field image (the mean of the raw frames) to
-the output folder. The weights are downloaded on first use.
+(3 orientations x 3 phase shifts, in the order of acquisition). For every
+stack the script writes the VSR-SIM reconstruction, at twice the pixel count
+of the raw frames in each direction, and the wide-field image (the mean of
+the raw frames) to the output folder. The weights are downloaded on first use.
 
 With --rolling every frame of the input is a raw frame of one continuous
 acquisition, with the 9 illumination patterns repeating. A window of 9 frames
@@ -56,12 +56,19 @@ EXAMPLE_SEQUENCE = {
 WINDOW = 8  # side of the attention windows, the input is padded to a multiple of it
 
 
+def progress(blocks, block_size, total):
+    if total > 0:
+        done = min(100, 100 * blocks * block_size // total)
+        print("\r  %3d%% of %.0f MB" % (done, total / 1e6), end="", flush=True)
+
+
 def download(urls, dest, sha256):
     """Fetch a file, trying each URL in turn, and check its hash."""
     for url in urls:
         print("Downloading", url)
         try:
-            urllib.request.urlretrieve(url, dest + ".part")
+            urllib.request.urlretrieve(url, dest + ".part", progress)
+            print()
         except OSError as err:
             print("  failed:", err)
             continue
