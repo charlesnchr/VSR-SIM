@@ -1,12 +1,18 @@
 """Reconstruct raw SIM stacks with the pre-trained VSR-SIM model.
 
     python reconstruct.py stack.tif
+    python reconstruct.py --rolling sequence.tif
 
 Each input is a TIFF stack whose first 9 frames are the raw SIM acquisition
 (3 orientations x 3 phase shifts, in any order). For every stack the script
 writes the VSR-SIM reconstruction, at twice the pixel count of the raw frames
 in each direction, and the wide-field image (the mean of the raw frames) to
 the output folder. The weights are downloaded on first use.
+
+With --rolling every frame of the input is a raw frame of one continuous
+acquisition, with the 9 illumination patterns repeating. A window of 9 frames
+slides along the sequence one frame at a time and each position gives one
+reconstruction, so N raw frames give N - 8 images instead of N / 9.
 """
 
 import argparse
@@ -93,7 +99,13 @@ def reconstruct(net, frames, device):
     return sr[0, 0, : 2 * h, : 2 * w].clamp(0, 1).cpu().numpy()
 
 
-def save_png(path, image):
+def rolling(net, frames, device):
+    """Yield one reconstruction for every window of 9 consecutive frames."""
+    for t in range(len(frames) - 8):
+        yield reconstruct(net, frames[t:t + 9], device)
+
+
+def save(path, image):
     io.imsave(path, (image * 255).round().astype("uint8"), check_contrast=False)
 
 
@@ -101,6 +113,8 @@ def main():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("stacks", nargs="+", help="TIFF stacks with at least 9 frames")
     p.add_argument("--weights", default=WEIGHTS_NAME, help="path to the model file")
+    p.add_argument("--rolling", action="store_true",
+                   help="treat every frame as a raw frame and reconstruct each window of 9")
     p.add_argument("--out", default="reconstructions", help="output folder")
     p.add_argument("--cpu", action="store_true", help="run on CPU even if a GPU is available")
     args = p.parse_args()
@@ -114,10 +128,21 @@ def main():
         if stack.ndim != 3 or stack.shape[0] < 9:
             print("Skipping %s: expected a stack of at least 9 frames, got shape %s" % (path, stack.shape))
             continue
-        name = os.path.splitext(os.path.basename(path))[0]
-        frames = normalise(stack[:9])
-        save_png(os.path.join(args.out, name + "_widefield.png"), widefield(frames))
-        save_png(os.path.join(args.out, name + "_vsrsim.png"), reconstruct(net, frames, device))
+        name = os.path.join(args.out, os.path.splitext(os.path.basename(path))[0])
+        if args.rolling:
+            frames = normalise(stack)
+            n = len(frames) - 8
+            images = []
+            for t, image in enumerate(rolling(net, frames, device)):
+                images.append(image)
+                print("\r%s: window %d of %d" % (path, t + 1, n), end="", flush=True)
+            print()
+            save(name + "_widefield.tif", np.array([widefield(frames[t:t + 9]) for t in range(n)]))
+            save(name + "_vsrsim.tif", np.array(images))
+        else:
+            frames = normalise(stack[:9])
+            save(name + "_widefield.png", widefield(frames))
+            save(name + "_vsrsim.png", reconstruct(net, frames, device))
         print("Reconstructed", path)
 
 
