@@ -59,7 +59,7 @@ write-host $len
         mkdir -p $using:outdir/$savedir/$sub_savedir > $null
         ffmpeg -loglevel quiet -accurate_seek -ss $frame_pos -i $vid -frames:v 9 -q:v 2 -vf scale=1024:1024 -y "$using:outdir/$savedir/$sub_savedir/%02d.jpg"
 
-        $frame_pos += 
+        $frame_pos += 5
         $counter++
         write-host $frame_pos $counter "$using:outdir/$savedir/$sub_savedir"
     }
