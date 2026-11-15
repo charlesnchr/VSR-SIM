@@ -87,7 +87,7 @@ def main():
 
     model = build_model(opt).net_g # based on train script and options
 
-    loadnet = torch.load(args.model_path)
+    loadnet = torch.load(args.model_path, map_location='cpu')
     if 'params_ema' in loadnet:
         keyname = 'params_ema'
     else:
@@ -404,7 +404,7 @@ def define_model(args):
             **{'pixelshuffleFactor':2})
 
 
-    loadnet = torch.load(args.model_path)
+    loadnet = torch.load(args.model_path, map_location='cpu')
     if 'params_ema' in loadnet:
         keyname = 'params_ema'
     else:
