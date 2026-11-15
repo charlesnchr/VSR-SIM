@@ -10,7 +10,6 @@ import torch.utils.checkpoint as checkpoint
 from basicsr.utils.registry import ARCH_REGISTRY
 from .arch_util import to_2tuple, trunc_normal_
 
-from self_attention_cv import AxialAttentionBlock
 
 
 def drop_path(x, drop_prob: float = 0., training: bool = False):
