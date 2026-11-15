@@ -10,7 +10,6 @@ import torch.utils.checkpoint as checkpoint
 from basicsr.utils.registry import ARCH_REGISTRY
 from .arch_util import to_2tuple, trunc_normal_
 
-from self_attention_cv import AxialAttentionBlock
 
 
 def drop_path(x, drop_prob: float = 0., training: bool = False):
@@ -124,7 +123,7 @@ class WindowAttention(nn.Module):
         # get pair-wise relative position index for each token inside the window
         coords_h = torch.arange(self.window_size[0])
         coords_w = torch.arange(self.window_size[1])
-        coords = torch.stack(torch.meshgrid([coords_h, coords_w]))  # 2, Wh, Ww
+        coords = torch.stack(torch.meshgrid([coords_h, coords_w], indexing="ij"))  # 2, Wh, Ww
         coords_flatten = torch.flatten(coords, 1)  # 2, Wh*Ww
         relative_coords = coords_flatten[:, :, None] - coords_flatten[:, None, :]  # 2, Wh*Ww, Wh*Ww
         relative_coords = relative_coords.permute(1, 2, 0).contiguous()  # Wh*Ww, Wh*Ww, 2
