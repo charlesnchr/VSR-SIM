@@ -19,23 +19,15 @@
   <sub>A simulated acquisition of microtubules that move one camera pixel per raw frame, with beads on paths of their own. The first three panels come from the same raw frames, and ML-SIM reconstructs each stack of nine on its own. Run <code>python reconstruct.py --rolling examples/Sequence_microtubules.tif</code> to reproduce the VSR-SIM panel.</sub>
 </p>
 
-## Introduction
+Structured illumination microscopy (SIM) doubles the resolution of a fluorescence microscope, with little enough light to image living cells. The catch is that one super-resolved image takes nine exposures, and the reconstruction assumes that the sample held still for all nine. Living cells do not. Whatever moved between the first exposure and the last comes out doubled, smeared or covered in stripes. The usual way round it is a shorter exposure, which costs signal.
 
-Reconstruction method for **V**ideo **S**uper-**R**esolution **S**tructured **I**llumination **M**icroscopy (VSR-SIM) using a vision transformer architecture. 
+VSR-SIM treats the nine exposures as a short video. A transformer with windowed self-attention and channel attention takes all nine frames at once and reconstructs the sample as it was at the middle of the stack. There is no optical flow and no motion model. The network learned this from 200 hours of BBC nature documentaries passed through a simulation of the microscope, and it has never been trained on a real SIM image.
 
-The method is trained using synthesised video data based on a SIM image formation model and a dataset of nature documentaries for diverse and varied image data.
-
-Being a video super-resolution method, VSR-SIM is inherently robust to significant levels of motion in input data as illustrated below.
-
-![Comparison figure of VSR-SIM and other SIM reconstruction methods](fig/comparison-fig.png)
-
-## VSR-SIM Publications
-### Journal Publication, 2022
-Currently under review as of February 2022.
-
-### Pre-print manuscript, Feburary 2022
-https://arxiv.org/abs/2203.00030
-
+- **Motion does not break it.** On the paper's test set of moving scenes VSR-SIM scores 30.15 dB. ML-SIM scores 18.41 dB, and the classical methods CC-SIM, FairSIM and OpenSIM all score below the unprocessed wide-field image at 17.31 dB.
+- **Nine times the frame rate.** The network was trained with the illumination patterns in shuffled order, so it reconstructs any nine consecutive frames. Slide the window one frame at a time and N raw frames give N - 8 images instead of N / 9.
+- **No optical flow.** The stripes change from frame to frame, and flow estimators mistake that for motion. Attention alone does better. RBPN, a video super-resolution network built on optical flow, scores 29.25 dB on the same moving scenes.
+- **Trained on simulation only.** The training set is 100,000 nine-frame clips of nature footage, each passed through a SIM image formation model with randomised stripe frequency, phase, modulation depth and noise. The targets are the original frames, so they carry none of the motion artefacts that a classical reconstruction would put into them.
+- **Runs with one command.** `python reconstruct.py --examples` downloads the weights and the example data and reconstructs it.
 
 ## Layout of repository
 
