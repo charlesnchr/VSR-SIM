@@ -105,6 +105,26 @@ The paper also compares the methods on a microtubule stack with motion in it, wh
   <img src="fig/comparison-fig.png" alt="Fig. 1 of the paper: a microtubule stack reconstructed with CC-SIM, FairSIM, ML-SIM and VSR-SIM" width="640">
 </p>
 
+## How it works
+
+A SIM microscope lights the sample with a striped pattern and records nine frames, three stripe orientations with three phase shifts each. The stripes beat against fine detail in the sample and shift it down to frequencies the lens can pass. Reconstruction recovers that detail by combining the nine frames, and the combination only works if all nine show the same sample. Motion breaks that assumption, and optical flow cannot repair it, because the changing stripes look like motion to a flow estimator.
+
+VSR-SIM learns the reconstruction and the motion compensation together, from examples. Each training example is a nine-frame clip of ordinary video. The simulation multiplies every frame by a different stripe pattern, blurs it with the optical transfer function and adds noise. The target is the middle frame of the clip at twice the resolution, so the network has to work out what the sample looked like at that instant from eight frames in which it had moved.
+
+<p align="center">
+  <img src="fig/architecture.png" alt="Architecture: nine SIM frames pass through window channel attention blocks and an upsampling module" width="900">
+</p>
+
+The network is a stack of window channel attention blocks. Each block runs Swin transformer layers, which compute self-attention inside small shifted windows, and ends with channel attention and a skip connection. A pixel-shuffle module at the end doubles the sampling. The loss is a plain pixel loss against the target frame. There is no adversarial term that would reward invented texture.
+
+The patterns are shuffled in every training example, which is what makes rolling reconstruction possible. A classical algorithm needs the nine frames in a fixed order and gives one image per nine frames. VSR-SIM accepts any nine consecutive frames, so the window can advance one frame at a time.
+
+<p align="center">
+  <img src="fig/rolling-scheme.png" alt="Traditional SIM reconstruction gives one image per nine frames, rolling reconstruction gives one per frame" width="560">
+</p>
+
+In the paper's live-cell experiment a reshaping event in the endoplasmic reticulum spans 20 raw frames of 50 ms each. FairSIM gives two images of it. The paper shows twelve from VSR-SIM.
+
 ## Layout of repository
 
 - Powershell script for video dataset sampling:
