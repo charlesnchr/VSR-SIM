@@ -5,10 +5,10 @@
     python reconstruct.py --rolling sequence.tif
 
 Each input is a TIFF stack whose first 9 frames are the raw SIM acquisition
-(3 orientations x 3 phase shifts, in the order of acquisition). For every stack the script
-writes the VSR-SIM reconstruction, at twice the pixel count of the raw frames
-in each direction, and the wide-field image (the mean of the raw frames) to
-the output folder. The weights are downloaded on first use.
+(3 orientations x 3 phase shifts, in the order of acquisition). For every
+stack the script writes the VSR-SIM reconstruction, at twice the pixel count
+of the raw frames in each direction, and the wide-field image (the mean of
+the raw frames) to the output folder. The weights are downloaded on first use.
 
 With --rolling every frame of the input is a raw frame of one continuous
 acquisition, with the 9 illumination patterns repeating. A window of 9 frames
