@@ -1,10 +1,11 @@
 """Reconstruct raw SIM stacks with the pre-trained VSR-SIM model.
 
+    python reconstruct.py --examples
     python reconstruct.py stack.tif
     python reconstruct.py --rolling sequence.tif
 
 Each input is a TIFF stack whose first 9 frames are the raw SIM acquisition
-(3 orientations x 3 phase shifts, in any order). For every stack the script
+(3 orientations x 3 phase shifts, in the order of acquisition). For every stack the script
 writes the VSR-SIM reconstruction, at twice the pixel count of the raw frames
 in each direction, and the wide-field image (the mean of the raw frames) to
 the output folder. The weights are downloaded on first use.
@@ -13,6 +14,9 @@ With --rolling every frame of the input is a raw frame of one continuous
 acquisition, with the 9 illumination patterns repeating. A window of 9 frames
 slides along the sequence one frame at a time and each position gives one
 reconstruction, so N raw frames give N - 8 images instead of N / 9.
+
+--examples downloads the example data to examples/ and reconstructs the
+stacks in it. The folder also gets a simulated sequence to try --rolling on.
 """
 
 import argparse
@@ -34,6 +38,21 @@ WEIGHTS_NAME = "vsr-sim_swinir-rcab_20220202.pth"
 WEIGHTS_SHA256 = "33e053fe6cf54effac05de7385f94e7385de9ba20d59819f843aa396a4017b3a"
 WEIGHTS_URLS = (RELEASE + WEIGHTS_NAME, MIRROR + "model/swinir_rcab_nov2021.pth")
 
+# name and SHA-256 of the example data, 9-frame stacks first, then the sequence for --rolling
+EXAMPLE_STACKS = {
+    "Static_endoplasmic.tif": "2535eb96855a053b93a5ede741e6a4c97401964e67a332cc09119200d323e82f",
+    "Static_microtubules.tif": "fa1a04c5e1d9982090286099c7214630eee86794327860de7ba8a99704f194f0",
+    "Dynamic_microtubules.tif": "a61d88cce760a5aca6c12f7914ea67e5202a0564ec3c6085d8bb5cfbdded3edf",
+    "Synthetic_beads.tif": "3351e0b67fe12c3b2d7de2bd04379bd56871d1bf1b8318964132691acd6a8885",
+    "Synthetic_birds.tif": "c656985346c579f3c0a2f169f615d60d46a3c234b78cee3f6469472e10ec4ae7",
+    "Synthetic_city.tif": "98717e9d82c83c9161b18dc2133c14b74a78e8e0d15fe4ca27dea9e827df1aa9",
+    "Synthetic_wings.tif": "9d6b8b3bdb0326888f5dd8aa5741780e62ebd92ddb6013f6112f3ba9421c4e13",
+}
+EXAMPLE_SEQUENCE = {
+    "Sequence_microtubules.tif": "5c2056f416394d80c5a015f2d778c534238659f775fc272492e1e9a9b708bb7d",
+    "Sequence_microtubules_ground_truth.tif": "a9156c7dbb3dfac09938c93020f4786f0c7b7314280476da188b4c053585da03",
+}
+
 WINDOW = 8  # side of the attention windows, the input is padded to a multiple of it
 
 
@@ -54,6 +73,16 @@ def download(urls, dest, sha256):
         print("  checksum mismatch, discarding the file")
         os.remove(dest + ".part")
     raise SystemExit("Could not download %s. Fetch it by hand from %s" % (os.path.basename(dest), urls[0]))
+
+
+def fetch_examples(folder):
+    """Download the example data that is not in the folder yet, return the 9-frame stacks."""
+    os.makedirs(folder, exist_ok=True)
+    for name, sha256 in {**EXAMPLE_STACKS, **EXAMPLE_SEQUENCE}.items():
+        path = os.path.join(folder, name)
+        if not os.path.isfile(path):
+            download((RELEASE + name, MIRROR + name), path, sha256)
+    return [os.path.join(folder, name) for name in EXAMPLE_STACKS]
 
 
 def load_model(weights, device):
@@ -111,13 +140,20 @@ def save(path, image):
 
 def main():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("stacks", nargs="+", help="TIFF stacks with at least 9 frames")
+    p.add_argument("stacks", nargs="*", help="TIFF stacks with at least 9 frames")
+    p.add_argument("--examples", action="store_true", help="download the example data and reconstruct it")
     p.add_argument("--weights", default=WEIGHTS_NAME, help="path to the model file")
     p.add_argument("--rolling", action="store_true",
                    help="treat every frame as a raw frame and reconstruct each window of 9")
     p.add_argument("--out", default="reconstructions", help="output folder")
     p.add_argument("--cpu", action="store_true", help="run on CPU even if a GPU is available")
     args = p.parse_args()
+    if args.examples and args.rolling:
+        p.error("--examples reconstructs 9-frame stacks, run --rolling on the sequence afterwards")
+    if args.examples:
+        args.stacks += fetch_examples("examples")
+    if not args.stacks:
+        p.error("give at least one stack, or --examples")
 
     device = torch.device("cuda" if torch.cuda.is_available() and not args.cpu else "cpu")
     net = load_model(args.weights, device)
@@ -144,6 +180,10 @@ def main():
             save(name + "_widefield.png", widefield(frames))
             save(name + "_vsrsim.png", reconstruct(net, frames, device))
         print("Reconstructed", path)
+
+    if args.examples:
+        print("The results are in %s. For a moving sample, run" % args.out)
+        print("    python reconstruct.py --rolling examples/%s" % next(iter(EXAMPLE_SEQUENCE)))
 
 
 if __name__ == "__main__":
